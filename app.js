@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const xss = require('xss-clean'); // Importar middleware xss-clean
 
 // Importar rutas
 const usuariosRouter = require('./src/routes/usuarios.routes');
@@ -22,6 +23,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(xss()); // Usar middleware xss-clean
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
