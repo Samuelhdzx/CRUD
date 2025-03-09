@@ -208,11 +208,12 @@ function mostrarTareas(tareas) {
 // Función para mostrar detalles de la tarea
 async function mostrarDetallesTarea(tarea) {
     try {
-        // Corregir la ruta para obtener detalles de tarea
         const response = await fetch(`/api/tareas/${tarea._id}`);
+        if (!response.ok) {
+            throw new Error('Error al obtener detalles de la tarea');
+        }
         const tareaActualizada = await response.json();
         
-        // Actualizar el contenido del modal
         document.getElementById('detailTitle').textContent = tareaActualizada.titulo;
         document.getElementById('detailDescription').textContent = tareaActualizada.descripcion || 'Sin descripción';
         document.getElementById('detailUser').textContent = tareaActualizada.usuario ? tareaActualizada.usuario.nombre : 'No asignado';
@@ -222,7 +223,6 @@ async function mostrarDetallesTarea(tarea) {
         document.getElementById('detailCreatedAt').textContent = new Date(tareaActualizada.fecha_creacion).toLocaleDateString();
         document.getElementById('detailDueDate').textContent = new Date(tareaActualizada.fecha_vencimiento).toLocaleDateString();
         
-        // Mostrar el modal
         const modal = new bootstrap.Modal(document.getElementById('taskDetailsModal'));
         modal.show();
     } catch (error) {
@@ -232,19 +232,18 @@ async function mostrarDetallesTarea(tarea) {
 
 async function cambiarEstadoTarea(id) {
     try {
-        const tarea = await (await fetch(`/api/tareas/${id}`)).json();
-        const estados = ['pendiente', 'en_progreso', 'completada'];
-        const estadoActual = estados.indexOf(tarea.estado);
-        const nuevoEstado = estados[(estadoActual + 1) % estados.length];
-        
-        await fetch(`/api/tareas/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`/api/tareas/${id}`, {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ estado: nuevoEstado })
+            }
         });
-        
+
+        if (!response.ok) {
+            throw new Error('Error al actualizar estado');
+        }
+
+        const tarea = await response.json();
         cargarTareas();
         actualizarEstadisticas();
     } catch (error) {

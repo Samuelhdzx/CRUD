@@ -36,17 +36,17 @@ exports.crearTarea = async (req, res) => {
 
 exports.actualizarTarea = async (req, res) => {
     try {
-        const tarea = await Tarea.findByIdAndUpdate(
-            req.params.id, 
-            req.body,
-            { new: true }
-        );
+        const tarea = await Tarea.findById(req.params.id);
         if (!tarea) {
             return res.status(404).json({ mensaje: 'Tarea no encontrada' });
         }
+        
+        tarea.estado = tarea.estado === 'completada' ? 'pendiente' : 'completada';
+        await tarea.save();
+        
         res.json(tarea);
     } catch (error) {
-        res.status(400).json({ mensaje: 'Error al actualizar tarea', error: error.message });
+        res.status(500).json({ mensaje: 'Error al actualizar tarea', error: error.message });
     }
 };
 
