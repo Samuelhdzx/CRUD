@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #212529; /* Color oscuro para el texto en modo normal */
+        }
+        
+        .navbar {
+            background: #2c3e50;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.5rem;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s ease;
+            color: #212529; /* Color oscuro para el texto en modo normal */
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .priority-alta { border-left: 4px solid #dc3545; }
+        .priority-media { border-left: 4px solid #ffc107; }
+        .priority-baja { border-left: 4px solid #198754; }
+
+        .stats-card {
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: #212529; /* Color oscuro para el texto en modo normal */
+        }
+
+        .action-button {
+            background: white;
+            border: none;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            color: #212529; /* Color oscuro para el texto en modo normal */
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: #212529; /* Color oscuro para el texto en modo normal */
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="navbar-brand">
+            <i class="fas fa-tasks me-2"></i>
+            Gestor de Tareas
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <!-- Acciones principales -->
+            <div class="mb-4">
+                <button class="action-button mb-3" data-bs-toggle="modal" data-bs-target="#taskModal">
+                    <div class="d-flex align-items-center">
+                        <div class="btn-icon bg-primary text-white me-3">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Nueva Tarea</h6>
+                            <small class="text-muted">Agregar una tarea nueva</small>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="action-button mb-3" data-bs-toggle="modal" data-bs-target="#userModal">
+                    <div class="d-flex align-items-center">
+                        <div class="btn-icon bg-success text-white me-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Nuevo Usuario</h6>
+                            <small class="text-muted">Registrar un usuario</small>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="action-button" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    <div class="d-flex align-items-center">
+                        <div class="btn-icon bg-warning text-white me-3">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Nueva Categoría</h6>
+                            <small class="text-muted">Crear una categoría</small>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h6 class="mb-3">Filtrar por estado</h6>
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active" onclick="cargarTareas()">
+                        <i class="fas fa-list-ul me-2"></i>Todas las tareas
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="cargarTareasPorEstado('pendiente')">
+                        <i class="fas fa-clock me-2 text-warning"></i>Pendientes
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="cargarTareasPorEstado('en_progreso')">
+                        <i class="fas fa-spinner me-2 text-primary"></i>En Progreso
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="cargarTareasPorEstado('completada')">
+                        <i class="fas fa-check-circle me-2 text-success"></i>Completadas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-lg-9">
+            <!-- Estadísticas -->
+            <div class="row mb-4" id="statsCards"></div>
+
+            <!-- Lista de tareas -->
+            <div id="taskList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Usuario -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="userName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="userEmail" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearUsuario()">Guardar Usuario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Categoría -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="categoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <input type="color" class="form-control" id="categoryColor" value="#4a90e2" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearCategoria()">Guardar Categoría</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tarea -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Usuario Asignado</label>
+                        <select class="form-select" id="taskUser" required>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoría</label>
+                        <select class="form-select" id="taskCategory" required>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prioridad</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de vencimiento</label>
+                        <input type="date" class="form-control" id="taskDueDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="crearTarea()">Guardar Tarea</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles de Tarea (ahora fuera del modal de tarea) -->
+<div class="modal fade" id="taskDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de la Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h4 id="detailTitle" class="card-title"></h4>
+                        <p id="detailDescription" class="text-muted"></p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-user me-2"></i>Usuario
+                                </h6>
+                                <p id="detailUser" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-tag me-2"></i>Categoría
+                                </h6>
+                                <p id="detailCategory" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-flag me-2"></i>Prioridad
+                                </h6>
+                                <p id="detailPriority" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-clock me-2"></i>Estado
+                                </h6>
+                                <p id="detailStatus" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-calendar-alt me-2"></i>Creada
+                                </h6>
+                                <p id="detailCreatedAt" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-calendar-check me-2"></i>Vence
+                                </h6>
+                                <p id="detailDueDate" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
