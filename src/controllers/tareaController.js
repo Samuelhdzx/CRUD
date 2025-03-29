@@ -26,11 +26,15 @@ exports.obtenerTareasPorEstado = async (req, res) => {
 
 exports.crearTarea = async (req, res) => {
     try {
-        const tarea = new Tarea(req.body);
-        await tarea.save();
-        res.status(201).json(tarea);
+        const nuevaTarea = new Tarea({
+            ...req.body,
+            usuario_id: req.userId // Agregamos el ID del usuario autenticado
+        });
+        
+        const tareaGuardada = await nuevaTarea.save();
+        res.status(201).json(tareaGuardada);
     } catch (error) {
-        res.status(400).json({ mensaje: 'Error al crear tarea', error: error.message });
+        res.status(400).json({ mensaje: 'Error al crear la tarea', error: error.message });
     }
 };
 

@@ -1,30 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    cargarTareas();
-    cargarUsuarios();
-    cargarCategorias();
-    actualizarEstadisticas();
-
-    // Agregar listener para filtrado
-    document.getElementById('filterSelect').addEventListener('change', function(e) {
-        if (e.target.value) {
-            cargarTareasPorEstado(e.target.value);
-        } else {
-            cargarTareas();
-        }
-    });
-
-    document.getElementById('userForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        crearUsuario();
-    });
-    document.getElementById('categoryForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        crearCategoria();
-    });
-    document.getElementById('taskForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        crearTarea();
-    });
+    initApp();
 });
 
 async function crearUsuario() {
@@ -36,7 +11,8 @@ async function crearUsuario() {
         const response = await fetch('/api/usuarios', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AuthService.getToken()}`
             },
             body: JSON.stringify({
                 nombre: document.getElementById('userName').value,
@@ -63,7 +39,8 @@ async function crearCategoria() {
         const response = await fetch('/api/categorias', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AuthService.getToken()}`
             },
             body: JSON.stringify({
                 nombre: document.getElementById('categoryName').value,
@@ -90,7 +67,8 @@ async function crearTarea() {
         const response = await fetch('/api/tareas', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AuthService.getToken()}`
             },
             body: JSON.stringify({
                 titulo: document.getElementById('taskTitle').value,
@@ -116,7 +94,18 @@ async function crearTarea() {
 
 async function cargarUsuarios() {
     try {
-        const response = await fetch('/api/usuarios');
+        const response = await fetch('/api/usuarios', {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
+            throw new Error('Error al cargar usuarios');
+        }
         const usuarios = await response.json();
         const select = document.getElementById('taskUser');
         select.innerHTML = '<option value="">Seleccione un usuario</option>';
@@ -130,7 +119,18 @@ async function cargarUsuarios() {
 
 async function cargarCategorias() {
     try {
-        const response = await fetch('/api/categorias');
+        const response = await fetch('/api/categorias', {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
+            throw new Error('Error al cargar categorías');
+        }
         const categorias = await response.json();
         const select = document.getElementById('taskCategory');
         select.innerHTML = '<option value="">Seleccione una categoría</option>';
@@ -144,7 +144,18 @@ async function cargarCategorias() {
 
 async function cargarTareas() {
     try {
-        const response = await fetch('/api/tareas');
+        const response = await fetch('/api/tareas', {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
+            throw new Error('Error al cargar tareas');
+        }
         const tareas = await response.json();
         mostrarTareas(tareas);
     } catch (error) {
@@ -154,7 +165,18 @@ async function cargarTareas() {
 
 async function cargarTareasPorEstado(estado) {
     try {
-        const response = await fetch(`/api/tareas/estado/${estado}`);
+        const response = await fetch(`/api/tareas/estado/${estado}`, {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
+            throw new Error('Error al filtrar tareas');
+        }
         const tareas = await response.json();
         mostrarTareas(tareas);
     } catch (error) {
@@ -208,8 +230,16 @@ function mostrarTareas(tareas) {
 // Función para mostrar detalles de la tarea
 async function mostrarDetallesTarea(tarea) {
     try {
-        const response = await fetch(`/api/tareas/${tarea._id}`);
+        const response = await fetch(`/api/tareas/${tarea._id}`, {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
         if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
             throw new Error('Error al obtener detalles de la tarea');
         }
         const tareaActualizada = await response.json();
@@ -235,11 +265,16 @@ async function cambiarEstadoTarea(id) {
         const response = await fetch(`/api/tareas/${id}`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AuthService.getToken()}`
             }
         });
 
         if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
             throw new Error('Error al actualizar estado');
         }
 
@@ -256,9 +291,19 @@ async function eliminarTarea(id) {
     if (confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
         try {
             // Corregir la ruta para eliminar tarea
-            await fetch(`/api/tareas/${id}`, {
-                method: 'DELETE'
+            const response = await fetch(`/api/tareas/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${AuthService.getToken()}`
+                }
             });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    AuthService.logout();
+                    return;
+                }
+                throw new Error('Error al eliminar la tarea');
+            }
             cargarTareas();
             actualizarEstadisticas();
         } catch (error) {
@@ -270,7 +315,18 @@ async function eliminarTarea(id) {
 
 async function actualizarEstadisticas() {
     try {
-        const response = await fetch('/api/tareas');
+        const response = await fetch('/api/tareas', {
+            headers: {
+                'Authorization': `Bearer ${AuthService.getToken()}`
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                AuthService.logout();
+                return;
+            }
+            throw new Error('Error al actualizar estadísticas');
+        }
         const tareas = await response.json();
         
         const stats = {
@@ -318,4 +374,273 @@ async function actualizarEstadisticas() {
     } catch (error) {
         console.error('Error al actualizar estadísticas:', error);
     }
+}
+
+function checkAuth() {
+    if (!AuthService.isAuthenticated()) {
+        renderLoginPage();
+        return false;
+    }
+    return true;
+}
+
+function renderLoginPage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="auth-container">
+            <form class="auth-form" id="loginForm">
+                <h2 class="text-center mb-4">Iniciar Sesión</h2>
+                <input type="email" class="form-control mb-3" placeholder="Email" required>
+                <input type="password" class="form-control mb-3" placeholder="Contraseña" required>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Entrar</button>
+                <p class="text-center">¿No tienes cuenta? <a href="#" id="showRegister">Regístrate</a></p>
+                <div class="auth-error text-danger text-center"></div>
+            </form>
+        </div>
+    `;
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const [email, password] = e.target.querySelectorAll('input');
+        const result = await AuthService.login(email.value, password.value);
+        if (result.success) {
+            initApp();
+        } else {
+            document.querySelector('.auth-error').textContent = result.message;
+        }
+    });
+
+    document.getElementById('showRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        renderRegisterPage();
+    });
+}
+
+function renderRegisterPage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="auth-container">
+            <form class="auth-form" id="registerForm">
+                <h2 class="text-center mb-4">Registro</h2>
+                <input type="email" class="form-control mb-3" placeholder="Email" required>
+                <input type="password" class="form-control mb-3" placeholder="Contraseña" required>
+                <input type="password" class="form-control mb-3" placeholder="Confirmar Contraseña" required>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Registrarse</button>
+                <p class="text-center">¿Ya tienes cuenta? <a href="#" id="showLogin">Iniciar Sesión</a></p>
+                <div class="auth-error text-danger text-center"></div>
+            </form>
+        </div>
+    `;
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const [email, password, confirmPassword] = e.target.querySelectorAll('input');
+        
+        if (password.value !== confirmPassword.value) {
+            document.querySelector('.auth-error').textContent = 'Las contraseñas no coinciden';
+            return;
+        }
+
+        const result = await AuthService.register(email.value, password.value);
+        if (result.success) {
+            initApp();
+        } else {
+            document.querySelector('.auth-error').textContent = result.message;
+        }
+    });
+
+    document.getElementById('showLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        renderLoginPage();
+    });
+}
+
+async function initApp() {
+    if (!checkAuth()) return;
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <nav class="navbar">
+            <div class="container-fluid">
+                <span class="navbar-brand">Gestor de Tareas</span>
+                <button class="btn btn-outline-light" onclick="AuthService.logout()">Cerrar Sesión</button>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row" id="statsCards"></div>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="filter-section mb-3">
+                        <select id="filterSelect" class="form-select">
+                            <option value="">Todas las tareas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="en_progreso">En Progreso</option>
+                            <option value="completada">Completadas</option>
+                        </select>
+                    </div>
+                    <div id="taskList"></div>
+                </div>
+                <div class="col-md-4">
+                    <button class="action-button" data-bs-toggle="modal" data-bs-target="#taskModal">
+                        <i class="fas fa-plus me-2"></i> Nueva Tarea
+                    </button>
+                    <button class="action-button" data-bs-toggle="modal" data-bs-target="#userModal">
+                        <i class="fas fa-user me-2"></i> Nuevo Usuario
+                    </button>
+                    <button class="action-button" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                        <i class="fas fa-tag me-2"></i> Nueva Categoría
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Tarea -->
+        <div class="modal fade" id="taskModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nueva Tarea</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="taskForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="taskTitle" placeholder="Título" required>
+                            </div>
+                            <div class="mb-3">
+                                <textarea class="form-control" id="taskDescription" placeholder="Descripción"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-control" id="taskUser" required>
+                                    <option value="">Seleccionar Usuario</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-control" id="taskCategory" required>
+                                    <option value="">Seleccionar Categoría</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-control" id="taskPriority" required>
+                                    <option value="baja">Baja</option>
+                                    <option value="media">Media</option>
+                                    <option value="alta">Alta</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <input type="date" class="form-control" id="taskDueDate" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Tarea</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nuevo Usuario -->
+        <div class="modal fade" id="userModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nuevo Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="userForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="userName" placeholder="Nombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" id="userEmail" placeholder="Email" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Categoría -->
+        <div class="modal fade" id="categoryModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nueva Categoría</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="categoryForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="categoryName" placeholder="Nombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="color" class="form-control" id="categoryColor" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crear Categoría</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles de Tarea -->
+        <div class="modal fade" id="taskDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detalles de la Tarea</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <dl>
+                            <dt>Título</dt>
+                            <dd id="detailTitle"></dd>
+                            <dt>Descripción</dt>
+                            <dd id="detailDescription"></dd>
+                            <dt>Usuario Asignado</dt>
+                            <dd id="detailUser"></dd>
+                            <dt>Categoría</dt>
+                            <dd id="detailCategory"></dd>
+                            <dt>Prioridad</dt>
+                            <dd id="detailPriority"></dd>
+                            <dt>Estado</dt>
+                            <dd id="detailStatus"></dd>
+                            <dt>Fecha de Creación</dt>
+                            <dd id="detailCreatedAt"></dd>
+                            <dt>Fecha de Vencimiento</dt>
+                            <dd id="detailDueDate"></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Inicializar la aplicación
+    cargarTareas();
+    cargarUsuarios();
+    cargarCategorias();
+    actualizarEstadisticas();
+
+    // Agregar listener para filtrado
+    document.getElementById('filterSelect').addEventListener('change', function(e) {
+        if (e.target.value) {
+            cargarTareasPorEstado(e.target.value);
+        } else {
+            cargarTareas();
+        }
+    });
+
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        crearUsuario();
+    });
+    document.getElementById('categoryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        crearCategoria();
+    });
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        crearTarea();
+    });
 }

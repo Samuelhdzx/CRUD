@@ -11,6 +11,7 @@ const xss = require('xss-clean'); // Importar middleware xss-clean
 const usuariosRouter = require('./src/routes/usuarios.routes');
 const tareasRouter = require('./src/routes/tareas.routes');
 const categoriasRouter = require('./src/routes/categorias.routes');
+const authRouter = require('./src/routes/auth.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -29,19 +30,18 @@ app.use(xss()); // Usar middleware xss-clean
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas API
+app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/tareas', tareasRouter);
 app.use('/api/categorias', categoriasRouter);
 
-// Manejo de rutas no encontradas
-app.use((req, res, next) => {
-    const error = new Error('Ruta no encontrada');
-    error.status = 404;
-    next(error);
-});
-
 // Ruta para el frontend (debe ir después de las rutas API)
 app.get('*', (req, res) => {
+    // Ignorar solicitudes de favicon.ico
+    if (req.url === '/favicon.ico') {
+        res.status(204).end();
+        return;
+    }
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

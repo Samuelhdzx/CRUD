@@ -20,7 +20,7 @@ const tareaSchema = new mongoose.Schema({
         enum: ['baja', 'media', 'alta'],
         default: 'media'
     },
-    usuario_id: {
+    usuario: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true
