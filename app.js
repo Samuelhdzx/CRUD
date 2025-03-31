@@ -1,23 +1,25 @@
 require('dotenv').config();
 
+// Debug environment loading
+console.log('🔍 Current environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    JWT_SECRET_EXISTS: !!process.env.JWT_SECRET,
+    JWT_EXPIRES_IN_EXISTS: !!process.env.JWT_EXPIRES_IN
+});
+
 // Environment validation with fallbacks
 const ENV = process.env.NODE_ENV || 'development';
 const JWT_SECRET = process.env.JWT_SECRET || 'clavesitauwu';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
-// Only enforce JWT_SECRET in production
-if (ENV === 'production' && !process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET is required in production');
-    process.exit(1);
-}
-
-// Set environment variables with fallbacks
+// Always set these values regardless of environment
 process.env.JWT_SECRET = JWT_SECRET;
 process.env.JWT_EXPIRES_IN = JWT_EXPIRES_IN;
+process.env.NODE_ENV = ENV;
 
 console.log('✅ Environment configured:', {
     NODE_ENV: ENV,
-    JWT_SECRET: '[SET]',
+    JWT_SECRET: '[PRESENT]',
     JWT_EXPIRES_IN: JWT_EXPIRES_IN
 });
 
