@@ -1,4 +1,20 @@
 require('dotenv').config();
+
+// Add this after dotenv config and before other imports
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'JWT_EXPIRES_IN'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+    console.error('❌ Missing required environment variables:', missingEnvVars);
+    process.exit(1);
+}
+
+console.log('✅ Environment variables loaded:', {
+    NODE_ENV: process.env.NODE_ENV,
+    JWT_SECRET: process.env.JWT_SECRET ? '[SET]' : '[NOT SET]',
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN
+});
+
 const express = require("express");
 const mongoose = require("mongoose");
 const helmet = require('helmet');
