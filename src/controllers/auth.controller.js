@@ -10,6 +10,10 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'Email and password are required' });
         }
 
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         
         const user = new Auth({
@@ -22,15 +26,18 @@ exports.register = async (req, res) => {
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
 
         res.status(201).json({ token });
     } catch (error) {
+        console.error('Error en registro:', error);
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Email already exists' });
         }
-        console.error('Error en registro:', error);
+        if (error.message === 'JWT_SECRET is not configured') {
+            return res.status(500).json({ message: 'Error de configuración del servidor' });
+        }
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
@@ -45,6 +52,10 @@ exports.login = async (req, res) => {
             });
         }
 
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         const user = await Auth.findOne({ email });
         if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({
@@ -55,7 +66,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
 
         user.password = undefined;
@@ -66,6 +77,10 @@ exports.login = async (req, res) => {
             data: { user }
         });
     } catch (error) {
+        console.error('Error en login:', error);
+        if (error.message === 'JWT_SECRET is not configured') {
+            return res.status(500).json({ message: 'Error de configuración del servidor' });
+        }
         res.status(400).json({
             status: 'error',
             message: error.message
