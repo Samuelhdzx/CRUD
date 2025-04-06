@@ -36,6 +36,7 @@ const usuariosRouter = require('./src/routes/usuarios.routes');
 const tareasRouter = require('./src/routes/tareas.routes');
 const categoriasRouter = require('./src/routes/categorias.routes');
 const authRouter = require('./src/routes/auth.routes');
+const adminRoutes = require('./src/routes/admin.routes'); // Actualizado
 const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -58,6 +59,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/usuarios', usuariosRouter);
 app.use('/api/tareas', tareasRouter);
 app.use('/api/categorias', categoriasRouter);
+app.use('/api/admin', adminRoutes); // Cambiado a /api/admin
 
 // Ruta para el frontend (debe ir después de las rutas API)
 app.get('*', (req, res) => {
