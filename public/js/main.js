@@ -644,3 +644,57 @@ async function initApp() {
         crearTarea();
     });
 }
+
+// Función para sanitizar inputs
+function sanitizeInput(input) {
+    return input.replace(/[<>]/g, '').trim();
+}
+
+// Función para validar datos antes de enviar
+function validateData(data) {
+    if (!data.title || typeof data.title !== 'string') return false;
+    if (data.title.length > 100) return false;
+    return true;
+}
+
+// Interceptor para todas las peticiones
+async function secureRequest(url, options = {}) {
+    // Agregar token CSRF si existe
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        ...options.headers
+    };
+
+    const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include' // Incluir cookies en las peticiones
+    });
+
+    if (!response.ok) {
+        throw new Error('Error en la petición');
+    }
+
+    return response.json();
+}
+
+// Ejemplo de uso en las operaciones CRUD
+async function createTask(taskData) {
+    const sanitizedData = {
+        title: sanitizeInput(taskData.title),
+        description: sanitizeInput(taskData.description),
+        priority: sanitizeInput(taskData.priority)
+    };
+
+    if (!validateData(sanitizedData)) {
+        throw new Error('Datos inválidos');
+    }
+
+    return await secureRequest('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify(sanitizedData)
+    });
+}
