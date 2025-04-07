@@ -15,4 +15,7 @@ router.post('/resource',
   yourControllerFunction
 );
 
+
+
+
 export default router;
